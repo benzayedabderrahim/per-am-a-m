@@ -1,0 +1,784 @@
+/* components/InteractivePresentation.css */
+.interactive-presentation {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+  background-size: 400% 400%;
+  animation: gradientBG 15s ease infinite;
+  padding: 20px;
+  overflow-x: hidden;
+  touch-action: pan-y;
+  width: 100%;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@keyframes gradientBG {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.cinema-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.9) 100%);
+  z-index: 5;
+  pointer-events: none;
+}
+
+.spotlight {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+  border-radius: 50%;
+  z-index: 4;
+  pointer-events: none;
+  filter: blur(20px);
+}
+
+.container {
+  width: 100%;
+  max-width: 900px;
+  text-align: center;
+  position: relative;
+  height: auto;
+  z-index: 6;
+}
+
+.init-btn {
+  padding: 25px 70px;
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(45deg, #FF5F6D, #FFC371, #FF5F6D);
+  background-size: 200% 200%;
+  color: white;
+  border: none;
+  border-radius: 15px;
+  cursor: pointer;
+  transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 
+    0 0 50px rgba(255, 95, 109, 0.6),
+    0 10px 40px rgba(0, 0, 0, 0.5),
+    inset 0 0 30px rgba(255, 255, 255, 0.3);
+  position: relative;
+  overflow: hidden;
+  letter-spacing: 3px;
+  z-index: 10;
+  animation: 
+    pulseCinema 3s infinite,
+    gradientShift 4s infinite alternate,
+    floatEffect 6s infinite ease-in-out;
+  transform-style: preserve-3d;
+  perspective: 500px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+@keyframes pulseCinema {
+  0% { 
+    transform: scale(1) translateZ(0);
+    box-shadow: 
+      0 0 50px rgba(255, 95, 109, 0.6),
+      0 10px 40px rgba(0, 0, 0, 0.5),
+      inset 0 0 30px rgba(255, 255, 255, 0.3);
+  }
+  50% { 
+    transform: scale(1.08) translateZ(20px);
+    box-shadow: 
+      0 0 80px rgba(255, 95, 109, 0.9),
+      0 20px 60px rgba(0, 0, 0, 0.7),
+      inset 0 0 40px rgba(255, 255, 255, 0.5);
+  }
+  100% { 
+    transform: scale(1) translateZ(0);
+    box-shadow: 
+      0 0 50px rgba(255, 95, 109, 0.6),
+      0 10px 40px rgba(0, 0, 0, 0.5),
+      inset 0 0 30px rgba(255, 255, 255, 0.3);
+  }
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+
+@keyframes floatEffect {
+  0%, 100% { transform: translateY(0) translateZ(0); }
+  50% { transform: translateY(-10px) translateZ(10px); }
+}
+
+.init-btn:before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, #FF5F6D, #FFC371, #FF5F6D, #FFC371);
+  background-size: 400% 400%;
+  z-index: -1;
+  border-radius: 17px;
+  animation: borderGlow 3s infinite linear;
+  filter: blur(5px);
+  opacity: 0.7;
+}
+
+@keyframes borderGlow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.init-btn:after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.1), transparent);
+  border-radius: 15px;
+  z-index: 1;
+}
+
+.init-btn:hover {
+  transform: translateY(-5px) scale(1.05) translateZ(30px);
+  animation-play-state: paused;
+}
+
+.init-btn:active {
+  transform: translateY(0) scale(0.98) translateZ(10px);
+  transition: all 0.1s ease;
+}
+
+.init-btn.hidden {
+  opacity: 0;
+  transform: scale(0.5) translateY(50px) translateZ(-100px);
+  pointer-events: none;
+  transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.play-icon {
+  font-size: 2rem;
+  animation: iconSparkle 2s infinite;
+}
+
+@keyframes iconSparkle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.1); }
+}
+
+.btn-text {
+  position: relative;
+  z-index: 2;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Content area styling */
+.content-area {
+  display: none;
+  opacity: 0;
+  transition: opacity 1s ease;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 25px;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+  margin: 0 auto;
+  z-index: 7;
+  height: 75vh;
+  max-height: 700px;
+}
+
+.content-area.active {
+  display: block;
+  opacity: 1;
+}
+
+/* Swipeable content container */
+.swipe-container {
+  display: flex;
+  width: 1400%; /* 100% * 14 slides */
+  height: 100%;
+  transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  touch-action: pan-y;
+}
+
+.content-item {
+  width: 7.142857%; /* 100% divided by 14 slides */
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 0;
+  position: relative;
+}
+
+/* For slides with images */
+.content-item.has-image {
+  flex-direction: column;
+}
+
+.content-item.has-image .text-container {
+  height: 45%;
+  justify-content: center;
+  padding-top: 0;
+}
+
+/* For slides without images - full height text */
+.content-item:not(.has-image) .text-container {
+  height: 100%;
+  justify-content: center;
+  padding-top: 0;
+}
+
+/* Fullscreen image styling */
+.item-image-container {
+  width: 100%;
+  height: 55%;
+  overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.item-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  background-color: #f0f0f0; /* Fallback background if image fails to load */
+}
+
+.image-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 40%;
+  background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+}
+
+/* Text content styling */
+.text-container {
+  padding: 25px 30px;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  text-align: center;
+  width: 100%;
+  height: 55%;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.item-title {
+  font-size: 2.2rem;
+  color: #1a2a6c;
+  margin-bottom: 20px;
+  font-weight: 700;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+  line-height: 1.3;
+  width: 100%;
+}
+
+.item-text {
+  font-size: 1.4rem;
+  line-height: 1.8;
+  color: #333;
+  margin-bottom: 10px;
+  width: 100%;
+}
+
+/* Text-only slides styling */
+.text-only-slide .text-container {
+  height: 100%;
+  justify-content: center;
+  padding: 40px 30px;
+}
+
+.text-only-slide .item-title {
+  font-size: 2.5rem;
+  margin-bottom: 30px;
+  color: #FF5F6D;
+}
+
+.text-only-slide .item-text {
+  font-size: 1.6rem;
+  line-height: 1.9;
+  color: #444;
+}
+
+/* Swipe instruction hint */
+.swipe-hint {
+  position: absolute;
+  bottom: 20px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+  z-index: 10;
+  animation: fadeInOut 3s infinite;
+  display: none;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 8px 15px;
+  border-radius: 20px;
+  width: fit-content;
+  margin: 0 auto;
+  backdrop-filter: blur(5px);
+}
+
+@keyframes fadeInOut {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+.hint-icon {
+  margin: 0 5px;
+}
+
+/* Music controls */
+.music-controls {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  display: flex;
+  gap: 15px;
+  z-index: 100;
+}
+
+.music-btn {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  color: #1a2a6c;
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  padding: 0;
+}
+
+.music-btn:hover {
+  transform: scale(1.1);
+  background: white;
+}
+
+.volume-slider {
+  position: absolute;
+  bottom: 70px;
+  right: 0;
+  width: 150px;
+  transform: rotate(-90deg);
+  transform-origin: right bottom;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 10px;
+  padding: 5px;
+}
+
+.volume-slider.show {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.music-info {
+  position: fixed;
+  bottom: 30px;
+  left: 30px;
+  color: white;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 12px 20px;
+  border-radius: 30px;
+  font-size: 0.9rem;
+  backdrop-filter: blur(5px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.music-icon {
+  font-size: 1rem;
+}
+
+.no-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Image placeholder for debugging */
+.image-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(45deg, #f0f0f0, #e0e0e0);
+  color: #666;
+  font-size: 1rem;
+  text-align: center;
+  padding: 20px;
+}
+
+.image-placeholder small {
+  font-size: 0.8rem;
+  margin-top: 10px;
+  color: #999;
+}
+
+/* ================= MOBILE ADJUSTMENTS ================= */
+@media (max-width: 768px) {
+  .interactive-presentation {
+    padding: 10px 5px;
+    height: 100vh;
+    overflow: hidden;
+    justify-content: flex-start;
+    padding-top: 10vh;
+  }
+  
+  .container {
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    max-height: 90vh;
+  }
+  
+  .cinema-overlay {
+    background: radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.95) 100%);
+  }
+  
+  .spotlight {
+    width: 300px;
+    height: 300px;
+    filter: blur(15px);
+  }
+  
+  .init-btn {
+    padding: 20px 40px;
+    font-size: 1.8rem;
+    letter-spacing: 2px;
+    width: 90%;
+    max-width: 350px;
+    border-radius: 12px;
+  }
+  
+  .play-icon {
+    font-size: 1.6rem;
+  }
+  
+  .content-area {
+    height: 70vh !important;
+    max-height: 600px !important;
+    border-radius: 20px;
+    width: 95%;
+    margin: 0 auto;
+    display: none;
+  }
+  
+  .content-area.active {
+    display: block;
+  }
+  
+  .item-image-container {
+    height: 45%;
+    min-height: 200px;
+  }
+  
+  .content-item.has-image .text-container {
+    height: 55%;
+    padding: 15px;
+    max-height: 55%;
+  }
+  
+  .text-container {
+    padding: 15px 20px;
+    height: 100%;
+  }
+  
+  .item-title {
+    font-size: 1.6rem;
+    margin-bottom: 15px;
+    line-height: 1.2;
+  }
+  
+  .item-text {
+    font-size: 1.1rem;
+    line-height: 1.5;
+    margin-bottom: 0;
+    overflow-y: auto;
+    max-height: calc(100% - 60px);
+  }
+  
+  .text-only-slide .text-container {
+    padding: 25px 20px;
+    justify-content: center;
+  }
+  
+  .text-only-slide .item-title {
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+  }
+  
+  .text-only-slide .item-text {
+    font-size: 1.3rem;
+    line-height: 1.6;
+  }
+  
+  .swipe-hint {
+    display: none; /* Initially hidden */
+    bottom: 15px;
+    font-size: 0.8rem;
+    padding: 6px 12px;
+    z-index: 20;
+  }
+  
+  .music-controls {
+    bottom: 15px;
+    right: 15px;
+    gap: 10px;
+  }
+  
+  .music-btn {
+    width: 45px;
+    height: 45px;
+    font-size: 1.1rem;
+  }
+  
+  .music-info {
+    bottom: 15px;
+    left: 15px;
+    padding: 8px 12px;
+    font-size: 0.75rem;
+    max-width: 200px;
+  }
+  
+  .volume-slider {
+    bottom: 60px;
+    width: 120px;
+  }
+  
+  /* Fix for small screens */
+  .swipe-container {
+    touch-action: pan-y pinch-zoom;
+  }
+}
+
+@media (max-width: 480px) {
+  .interactive-presentation {
+    padding: 5px;
+    padding-top: 5vh;
+  }
+  
+  .spotlight {
+    width: 250px;
+    height: 250px;
+  }
+  
+  .init-btn {
+    padding: 18px 35px;
+    font-size: 1.5rem;
+    width: 85%;
+    max-width: 320px;
+    border-radius: 10px;
+  }
+  
+  .content-area {
+    height: 65vh !important;
+    max-height: 500px !important;
+    width: 92%;
+    border-radius: 15px;
+  }
+  
+  .item-title {
+    font-size: 1.4rem;
+    margin-bottom: 12px;
+  }
+  
+  .item-text {
+    font-size: 1rem;
+    line-height: 1.4;
+  }
+  
+  .text-only-slide .item-title {
+    font-size: 1.6rem;
+  }
+  
+  .text-only-slide .item-text {
+    font-size: 1.1rem;
+  }
+  
+  .text-container {
+    padding: 12px 15px;
+  }
+  
+  .item-image-container {
+    height: 45%;
+    min-height: 180px;
+  }
+  
+  .swipe-hint {
+    font-size: 0.7rem;
+    bottom: 10px;
+    padding: 5px 10px;
+  }
+  
+  .music-controls {
+    bottom: 10px;
+    right: 10px;
+    gap: 8px;
+  }
+  
+  .music-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+  
+  .music-info {
+    bottom: 10px;
+    left: 10px;
+    padding: 6px 10px;
+    font-size: 0.7rem;
+    max-width: 180px;
+  }
+  
+  .volume-slider {
+    width: 100px;
+  }
+}
+
+@media (max-height: 600px) and (orientation: landscape) {
+  .interactive-presentation {
+    align-items: flex-start;
+    padding-top: 10px;
+    overflow-y: auto;
+  }
+  
+  .init-btn {
+    padding: 15px 30px;
+    font-size: 1.4rem;
+    margin: 10px auto;
+  }
+  
+  .content-area {
+    height: 85vh !important;
+    max-height: none !important;
+    margin: 10px auto;
+  }
+  
+  .item-image-container {
+    height: 50%;
+    min-height: 150px;
+  }
+  
+  .item-title {
+    font-size: 1.3rem;
+  }
+  
+  .item-text {
+    font-size: 0.95rem;
+    max-height: 120px;
+    overflow-y: auto;
+  }
+  
+  .text-only-slide .item-title {
+    font-size: 1.5rem;
+  }
+  
+  .text-only-slide .item-text {
+    font-size: 1.1rem;
+  }
+  
+  .music-controls {
+    bottom: 5px;
+    right: 5px;
+  }
+  
+  .music-info {
+    bottom: 5px;
+    left: 5px;
+  }
+}
+
+@media (max-width: 360px) {
+  .init-btn {
+    font-size: 1.4rem;
+    padding: 15px 25px;
+    border-radius: 8px;
+    max-width: 300px;
+  }
+  
+  .content-area {
+    height: 60vh !important;
+    max-height: 450px !important;
+  }
+  
+  .item-title {
+    font-size: 1.3rem;
+  }
+  
+  .item-text {
+    font-size: 0.95rem;
+    line-height: 1.3;
+  }
+  
+  .text-only-slide .item-title {
+    font-size: 1.4rem;
+  }
+  
+  .text-only-slide .item-text {
+    font-size: 1rem;
+  }
+  
+  .item-image-container {
+    min-height: 150px;
+  }
+}
+
+@supports (-webkit-touch-callout: none) {
+  .interactive-presentation {
+    min-height: -webkit-fill-available;
+  }
+  
+  .content-area {
+    max-height: -webkit-fill-available;
+  }
+  
+  .text-container {
+    -webkit-overflow-scrolling: touch;
+  }
+}
