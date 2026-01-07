@@ -15,44 +15,49 @@ const InteractivePresentation = () => {
     height: typeof window !== 'undefined' ? window.innerHeight : 800
   });
   
+  // New states for countdown
+  const [showCountdown, setShowCountdown] = useState(false);
+  const [daysLeft, setDaysLeft] = useState(365);
+  const [currentDate, setCurrentDate] = useState('9 January 2025');
+  
   // Refs
   const startPosX = useRef(0);
   const currentTranslate = useRef(0);
   const prevTranslate = useRef(0);
-  const autoRotateInterval = useRef(null);
   const audioRef = useRef(null);
   const swipeContainerRef = useRef(null);
   const contentAreaRef = useRef(null);
+  const countdownIntervalRef = useRef(null);
   
   const totalSlides = 14;
   
-  // Presentation data with FIXED image paths (use relative paths from public folder)
+  // Presentation data with FIXED image paths
   const slides = [
     {
       id: 1,
       type: 'image',
-      image: '/assets/1.jpeg', // FIXED: Changed to absolute path from public folder
+      image: '/assets/1.jpeg',
       title: 'First get in touch',
       text: "I didn't know that this conversation would become a place of comfort, trust, and quiet happiness. Over time, your words, your kindness, and your presence made this connection something meaningful to me."
     },
     {
       id: 2,
       type: 'image',
-      image: '/assets/2d.jpeg', // FIXED: Changed to absolute path from public folder
+      image: '/assets/2d.jpeg',
       title: 'Before the world knew, you did.',
       text: 'When I received my first professional opportunity — my CIVP contract — you were the first person I wanted to tell, right after my parents. Not because it was an announcement, but because trust chooses quietly.'
     },
     {
       id: 3,
       type: 'image',
-      image: '/assets/3.jpeg', // FIXED: Changed to absolute path from public folder
+      image: '/assets/3.jpeg',
       title: 'Every journey feels lighter when someone cares.',
       text: 'Before Algeria, before the roads and plans, there was you — advising, reminding, and looking out for me. It wasn\'t about the trip itself, but about knowing someone was thinking of me along the way. That kind of care stays.'
     },
     {
       id: 4,
       type: 'image',
-      image: '/assets/4.jpeg', // FIXED: Changed to absolute path from public folder
+      image: '/assets/4.jpeg',
       title: 'Small Moments, Big Meaning',
       text: 'It\'s in the small things — a message at the right time, a shared laugh, a moment of understanding. These fragments of connection weave into something lasting, something that feels like home.'
     },
@@ -112,6 +117,87 @@ const InteractivePresentation = () => {
     }
   ];
 
+  // Date calculation function
+  const calculateDateFromDaysLeft = (days) => {
+    const startDate = new Date('2025-01-09');
+    const targetDate = new Date('2026-01-09');
+    const totalDays = 365;
+    
+    // Calculate progress percentage
+    const progress = (totalDays - days) / totalDays;
+    
+    // Calculate current date based on progress
+    const timeDiff = targetDate.getTime() - startDate.getTime();
+    const currentTime = startDate.getTime() + (timeDiff * progress);
+    const currentDateObj = new Date(currentTime);
+    
+    // Format date
+    const options = { day: 'numeric', month: 'long', year: 'numeric' };
+    return currentDateObj.toLocaleDateString('en-US', options);
+  };
+
+  // Start countdown animation
+  const startCountdown = () => {
+    setShowCountdown(true);
+    setDaysLeft(365);
+    setCurrentDate('9 January 2025');
+    
+    // Clear any existing intervals
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+    }
+    
+    // Start music immediately
+    playMusic();
+    
+    // Calculate interval for 5 seconds total (5000ms / 365 ≈ 13.7ms per day)
+    const intervalTime = 5000 / 365; // About 13.7ms per day for 5 seconds total
+    
+    countdownIntervalRef.current = setInterval(() => {
+      setDaysLeft(prevDays => {
+        const newDays = prevDays - 1;
+        
+        if (newDays <= 0) {
+          clearInterval(countdownIntervalRef.current);
+          // Transition to presentation after countdown
+          setTimeout(() => {
+            setShowCountdown(false);
+            startPresentation();
+          }, 300); // Brief pause at the end
+          return 0;
+        }
+        
+        // Update current date
+        setCurrentDate(calculateDateFromDaysLeft(newDays));
+        return newDays;
+      });
+    }, intervalTime);
+  };
+
+  // Start presentation
+  const startPresentation = () => {
+    setIsStarted(true);
+    
+    setTimeout(() => {
+      if (contentAreaRef.current) {
+        contentAreaRef.current.classList.add('active');
+      }
+      
+      // Show swipe hint briefly on mobile
+      if (windowSize.width <= 768) {
+        setTimeout(() => {
+          const hint = document.getElementById('swipe-hint');
+          if (hint) {
+            hint.style.display = 'block';
+            setTimeout(() => {
+              hint.style.display = 'none';
+            }, 8000);
+          }
+        }, 1000);
+      }
+    }, 50);
+  };
+
   // FIXED: Improved resize handler with debounce
   useEffect(() => {
     let resizeTimer;
@@ -148,39 +234,11 @@ const InteractivePresentation = () => {
     }
     
     return () => {
-      stopAutoRotation();
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+      }
     };
   }, []);
-
-  // Start presentation
-  const startPresentation = () => {
-    setIsStarted(true);
-    
-    setTimeout(() => {
-      if (contentAreaRef.current) {
-        contentAreaRef.current.classList.add('active');
-      }
-      
-      // Play music when presentation starts
-      playMusic();
-      
-      // Start auto rotation
-      startAutoRotation();
-      
-      // Show swipe hint briefly on mobile
-      if (windowSize.width <= 768) {
-        setTimeout(() => {
-          const hint = document.getElementById('swipe-hint');
-          if (hint) {
-            hint.style.display = 'block';
-            setTimeout(() => {
-              hint.style.display = 'none';
-            }, 8000);
-          }
-        }, 1000);
-      }
-    }, 50);
-  };
 
   // Music controls
   const playMusic = () => {
@@ -238,36 +296,12 @@ const InteractivePresentation = () => {
       swipeContainerRef.current.style.transition = 'transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
       swipeContainerRef.current.style.transform = `translateX(${prevTranslate.current}px)`;
     }
-    
-    // Reset auto rotation
-    resetAutoRotation();
   }, [totalSlides]);
-
-  const startAutoRotation = () => {
-    stopAutoRotation();
-    autoRotateInterval.current = setInterval(() => {
-      const nextIndex = (currentItemIndex + 1) % totalSlides;
-      goToSlide(nextIndex);
-    }, 10000);
-  };
-
-  const stopAutoRotation = () => {
-    if (autoRotateInterval.current) {
-      clearInterval(autoRotateInterval.current);
-      autoRotateInterval.current = null;
-    }
-  };
-
-  const resetAutoRotation = () => {
-    stopAutoRotation();
-    startAutoRotation();
-  };
 
   // Touch handlers with improved mobile detection
   const handleTouchStart = (e) => {
     startPosX.current = e.touches[0].clientX;
     setIsDragging(true);
-    resetAutoRotation();
     
     // Prevent scrolling while swiping
     document.body.style.overflow = 'hidden';
@@ -318,7 +352,6 @@ const InteractivePresentation = () => {
     if (swipeContainerRef.current) {
       swipeContainerRef.current.style.cursor = 'grabbing';
     }
-    resetAutoRotation();
   };
 
   const handleMouseMove = (e) => {
@@ -376,14 +409,14 @@ const InteractivePresentation = () => {
     const handleVisibilityChange = () => {
       if (document.hidden && isMusicPlaying && audioRef.current) {
         audioRef.current.pause();
-      } else if (!document.hidden && isMusicPlaying && isStarted && audioRef.current) {
+      } else if (!document.hidden && isMusicPlaying && audioRef.current) {
         audioRef.current.play();
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [isMusicPlaying, isStarted]);
+  }, [isMusicPlaying]);
 
   // Get volume icon based on level
   const getVolumeIcon = () => {
@@ -394,85 +427,125 @@ const InteractivePresentation = () => {
 
   return (
     <div className="interactive-presentation">
-      <div className="cinema-overlay"></div>
-      <div className="spotlight"></div>
-      
-      <div className="container">
-        {!isStarted ? (
-          <button 
-            className={`init-btn ${isStarted ? 'hidden' : ''}`}
-            onClick={startPresentation}
-          >
-            <span role="img" aria-label="play" className="play-icon">▶️</span> 
-            <span className="btn-text">Click here</span>
-          </button>
-        ) : (
-          <div 
-            className="content-area" 
-            ref={contentAreaRef}
-            id="content-area"
-          >
-            <div 
-              className="swipe-container no-select"
-              ref={swipeContainerRef}
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseLeave}
-              onContextMenu={(e) => e.preventDefault()}
-            >
-              {slides.map((slide, index) => (
-                <div 
-                  key={slide.id}
-                  className={`content-item ${
-                    slide.type === 'image' ? 'has-image' : 
-                    slide.type === 'text-only' ? 'text-only-slide' : ''
-                  }`}
-                  id={`item-${slide.id}`}
-                >
-                  {slide.type === 'image' && slide.image && (
-                    <div className="item-image-container">
-                      <img 
-                        src={slide.image} 
-                        alt={slide.title} 
-                        className="item-image" 
-                        onError={(e) => {
-                          console.error(`Failed to load image: ${slide.image}`);
-                          e.target.style.display = 'none';
-                          e.target.parentElement.innerHTML = `
-                            <div class="image-placeholder">
-                              <span>Image not found</span>
-                              <br/>
-                              <small>Place image at: public${slide.image}</small>
-                            </div>
-                          `;
-                        }}
-                      />
-                      <div className="image-overlay"></div>
-                    </div>
-                  )}
-                  <div className="text-container">
-                    <h2 className="item-title">{slide.title}</h2>
-                    {slide.text && <p className="item-text">{slide.text}</p>}
-                  </div>
-                </div>
-              ))}
+      {/* Countdown Screen */}
+      {showCountdown && (
+        <div className="countdown-screen">
+          <div className="cinema-overlay-dark"></div>
+          <div className="film-grain"></div>
+          <div className="countdown-container">
+            {/* Date Range */}
+            <div className="date-range-cinematic">
+              <div className="date-start">9 January 2025</div>
+              <div className="date-arrow">→</div>
+              <div className="date-end">9 January 2026</div>
             </div>
             
-            <div className="swipe-hint" id="swipe-hint">
-              <span role="img" aria-label="left" className="hint-icon">◀️</span>
-              Swipe to navigate 
-              <span role="img" aria-label="right" className="hint-icon">▶️</span>
+            {/* Days Count - Just the number */}
+            <div className="days-number-cinematic">
+              {daysLeft}
             </div>
+            
+            {/* Current Date */}
+            <div className="current-date-cinematic">
+              {currentDate}
+            </div>
+            
+            {/* Cinematic Elements */}
+            <div className="cinematic-light-left"></div>
+            <div className="cinematic-light-right"></div>
+            <div className="scanlines"></div>
+            <div className="vignette"></div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
       
+      {/* Initial Button Screen */}
+      {!showCountdown && !isStarted && (
+        <div className="initial-screen">
+          <div className="cinema-overlay"></div>
+          <div className="spotlight"></div>
+          
+          <div className="container">
+            <button 
+              className="init-btn"
+              onClick={startCountdown}
+            >
+              <span role="img" aria-label="play" className="play-icon">▶️</span> 
+              <span className="btn-text">Click here</span>
+            </button>
+          </div>
+        </div>
+      )}
+      
+      {/* Main Presentation Screen */}
       {isStarted && (
         <>
+          <div className="cinema-overlay"></div>
+          <div className="spotlight"></div>
+          
+          <div className="container">
+            <div 
+              className="content-area" 
+              ref={contentAreaRef}
+              id="content-area"
+            >
+              <div 
+                className="swipe-container no-select"
+                ref={swipeContainerRef}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseLeave}
+                onContextMenu={(e) => e.preventDefault()}
+              >
+                {slides.map((slide, index) => (
+                  <div 
+                    key={slide.id}
+                    className={`content-item ${
+                      slide.type === 'image' ? 'has-image' : 
+                      slide.type === 'text-only' ? 'text-only-slide' : ''
+                    }`}
+                    id={`item-${slide.id}`}
+                  >
+                    {slide.type === 'image' && slide.image && (
+                      <div className="item-image-container">
+                        <img 
+                          src={slide.image} 
+                          alt={slide.title} 
+                          className="item-image" 
+                          onError={(e) => {
+                            console.error(`Failed to load image: ${slide.image}`);
+                            e.target.style.display = 'none';
+                            e.target.parentElement.innerHTML = `
+                              <div class="image-placeholder">
+                                <span>Image not found</span>
+                                <br/>
+                                <small>Place image at: public${slide.image}</small>
+                            `;
+                          }}
+                        />
+                        <div className="image-overlay"></div>
+                      </div>
+                    )}
+                    <div className="text-container">
+                      <h2 className="item-title">{slide.title}</h2>
+                      {slide.text && <p className="item-text">{slide.text}</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="swipe-hint" id="swipe-hint">
+                <span role="img" aria-label="left" className="hint-icon">◀️</span>
+                Swipe to navigate 
+                <span role="img" aria-label="right" className="hint-icon">▶️</span>
+              </div>
+            </div>
+          </div>
+          
           <div className="music-info">
             <span role="img" aria-label="music" className="music-icon">🎵</span> Background music
           </div>
@@ -502,8 +575,9 @@ const InteractivePresentation = () => {
         id="bg-music" 
         ref={audioRef}
         preload="auto"
+        loop
       >
-        <source src="../../assets/m.mp3" type="audio/mpeg" />
+        <source src="/assets/m.mp3" type="audio/mpeg" />
         Your browser does not support the audio element.
       </audio>
     </div>
