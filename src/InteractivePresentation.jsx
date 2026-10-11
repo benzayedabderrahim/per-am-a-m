@@ -82,7 +82,7 @@ const SECTIONS = [
     lines: [
       "When I think about the future, I think about the dreams we each carry, the goals we want to achieve, and the people we hope to become.",
       "I hope to see you succeed in everything you work hard for. I hope to celebrate your achievements, watch you accomplish your dreams, and remind you how proud you should be of yourself.",
-      "And if God wills it, I hope that one day we will look back at these little beginnings from a beautiful place we built together.",
+      "And Inchallah, I hope that one day we will look back at these little beginnings from a beautiful place we built together.",
       "Perhaps we'll smile at these messages, laugh at our old conversations, and realize that the little moments we cherished became part of something even more beautiful.",
       "Until then, let's keep moving forward, one day and one memory at a time. ❤️🫰",
     ],
@@ -108,7 +108,7 @@ const SECTIONS = [
       "Out of all the unexpected things that happened in my life, meeting you and getting to know you has become one of my favorite stories.",
       "I love the person you are, the way you express yourself, the little details that make you unique, and the beautiful memories we've created together.",
       "I don't know every detail of what tomorrow holds, but I know that I want to keep working toward a beautiful future, supporting your dreams while pursuing mine, and making more memories with you along the way.",
-      "And if God writes that future for us, I hope that one day we'll celebrate your birthday together, not just through messages on a screen, but side by side, grateful for the journey that brought us there.",
+      "I hope that one day we'll celebrate your birthday together, not just through messages on a screen, but side by side, grateful for the journey that brought us there.",
       "Happy Birthday, my favorite person.",
       "Thank you for being you. Thank you for choosing me, too.",
       "And if I had to go back to that very first message and live our story all over again, I'd still be happy to discover you, one conversation at a time.",
