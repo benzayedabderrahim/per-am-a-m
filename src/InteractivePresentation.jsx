@@ -181,7 +181,7 @@ function MessageCard({ section, index }) {
 export default function BirthdayPage() {
   const [introFading, setIntroFading] = useState(false);
   const [introGone, setIntroGone] = useState(false);
-  const [playing, setPlaying] = useState(false);
+
 
   const audioRef = useRef(null);
   const userPaused = useRef(false);
@@ -226,10 +226,6 @@ export default function BirthdayPage() {
     if (!a) return;
     a.volume = 0.6;
 
-    const onPlay = () => setPlaying(true);
-    const onPause = () => setPlaying(false);
-    a.addEventListener("play", onPlay);
-    a.addEventListener("pause", onPause);
 
     const events = ["pointerdown", "pointerup", "touchstart", "touchend", "click", "keydown", "wheel", "scroll"];
     const remove = () => events.forEach((ev) => window.removeEventListener(ev, unlock));
@@ -243,8 +239,6 @@ export default function BirthdayPage() {
     });
 
     return () => {
-      a.removeEventListener("play", onPlay);
-      a.removeEventListener("pause", onPause);
       remove();
     };
   }, [tryPlay]);
@@ -264,18 +258,6 @@ export default function BirthdayPage() {
     document.addEventListener("visibilitychange", onVisibility);
     return () => document.removeEventListener("visibilitychange", onVisibility);
   }, []);
-
-  const toggleMusic = () => {
-    const a = audioRef.current;
-    if (!a) return;
-    if (a.paused) {
-      userPaused.current = false;
-      a.play().catch(() => {});
-    } else {
-      userPaused.current = true;
-      a.pause();
-    }
-  };
 
   return (
     <div className={`amal-page ${introFading ? "is-ready" : ""}`}>
@@ -337,16 +319,7 @@ export default function BirthdayPage() {
       {/* Bear sticker */}
       <div className="bear" aria-hidden="true">🧸</div>
 
-      {/* Music toggle */}
-      <button
-        type="button"
-        className={`music ${playing ? "is-on" : "is-off"}`}
-        onClick={toggleMusic}
-        aria-label={playing ? "Pause music" : "Play music"}
-        aria-pressed={playing}
-      >
-        {playing ? "🎵" : "🔇"}
-      </button>
+    
 
       <audio ref={audioRef} src={SONG_SRC} loop preload="auto" />
     </div>
