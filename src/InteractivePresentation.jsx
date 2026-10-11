@@ -1,587 +1,354 @@
-// components/InteractivePresentation.jsx
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import './InteractivePresentation.css';
+// src/BirthdayPage.jsx
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import "./InteractivePresentation.css";
 
-const InteractivePresentation = () => {
-  // State variables
-  const [isStarted, setIsStarted] = useState(false);
-  const [currentItemIndex, setCurrentItemIndex] = useState(0);
-  const [isMusicPlaying, setIsMusicPlaying] = useState(false);
-  const [volume, setVolume] = useState(0.5);
-  const [showVolumeSlider, setShowVolumeSlider] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-  const [windowSize, setWindowSize] = useState({
-    width: typeof window !== 'undefined' ? window.innerWidth : 1200,
-    height: typeof window !== 'undefined' ? window.innerHeight : 800
-  });
-  
-  // New states for countdown
-  const [showCountdown, setShowCountdown] = useState(false);
-  const [daysLeft, setDaysLeft] = useState(365);
-  const [currentDate, setCurrentDate] = useState('9 January 2025');
-  
-  // Refs
-  const startPosX = useRef(0);
-  const currentTranslate = useRef(0);
-  const prevTranslate = useRef(0);
+/* ---------- Config ---------- */
+const SONG_SRC = "/assets/perfect.mp3"; // => public/assets/song.mp3
+const BIRTHDAY_LABEL = "Oct · 20 · 2026"; // change if needed
+const INTRO_MS = 4000; // intro text visible for 4 seconds
+
+/* ---------- Floating decorations around the hero ---------- */
+const DECOS = [
+  { e: "🎈", x: 6, y: 7, s: 1, d: 0 },
+  { e: "🎈", x: 88, y: 12, s: 1, d: 1.2 },
+  { e: "🍰", x: 13, y: 33, s: 0.9, d: 0.6 },
+  { e: "✨", x: 4, y: 46, s: 1, d: 1.8 },
+  { e: "🎀", x: 66, y: 22, s: 0.95, d: 0.3 },
+  { e: "🌸", x: 74, y: 53, s: 0.95, d: 2.1 },
+  { e: "⭐", x: 91, y: 59, s: 1, d: 0.9 },
+  { e: "🎁", x: 84, y: 74, s: 1, d: 1.5 },
+  { e: "🎉", x: 8, y: 79, s: 1, d: 2.4 },
+];
+
+/* ---------- Messages (in order) ---------- */
+const SECTIONS = [
+  {
+    title: "Happy Birthday, My Favorite Person ❤️🎂",
+    sticker: "💌",
+    lines: [
+      "Today is all about you, the beautiful soul who made an ordinary part of my life feel extraordinary.",
+      "Who would have thought that a simple message like “Khir men blech” would become the beginning of so many conversations, laughs, memories, and feelings?",
+      "I never knew that such a small beginning could lead to someone becoming so important to me.",
+      "And now, here we are... celebrating you, and I'm grateful that our story began exactly the way it did. ❤️🫰",
+    ],
+  },
+  {
+    title: "You Became Someone Special",
+    sticker: "💜",
+    lines: [
+      "Some people enter our lives and leave us with memories. Others become part of the way we see life itself.",
+      "You became someone I can talk to without pretending, someone I can share my thoughts with, and someone whose presence makes even an ordinary day feel a little brighter.",
+      "With you, I've discovered the beauty of being understood, supported, and appreciated.",
+      "And if there's one thing I want you to know today, it's that you mean much more to me than I could ever fully explain in words. ❤️🫰",
+    ],
+  },
+  {
+    title: "Thank You for Being Part of My Life",
+    sticker: "🫶",
+    lines: [
+      "Thank you for listening to me, believing in me, encouraging me, and reminding me that I can keep going even when things feel difficult.",
+      "Thank you for every little conversation, every laugh, every kind word, and every moment when you made me smile without even realizing it.",
+      "You may not always notice the effect you have on me, but your kindness and support have made a real difference in my life.",
+      "I hope I can give you the same comfort, encouragement, and happiness that you've given me.",
+      "Because you deserve to feel just as loved and appreciated as you make me feel. ❤️🫰",
+    ],
+  },
+  {
+    title: "Little Moments, Precious Memories",
+    sticker: "🌷",
+    lines: [
+      "It's funny how the smallest moments sometimes become the ones we treasure the most.",
+      "Our conversations, our silly jokes, our few meetings , the stories we share, the moments we encourage each other, and the memories we've already collected together...",
+      "They might seem ordinary to someone else, but to me, they have their own special meaning.",
+      "And the best part is that our story is still being written.",
+      "There are still so many places to discover, things to celebrate, dreams to achieve, and beautiful memories waiting for us.",
+      "I can't wait to look back one day and smile at everything we've lived together. ❤️🫰",
+    ],
+  },
+  {
+    title: "What I Hope You Always Remember",
+    sticker: "🤍",
+    lines: [
+      "I cannot promise that every day will be perfect, or that life will always go exactly as we imagine.",
+      "But I hope to always treat your heart with kindness, listen when you need someone, celebrate your successes, and encourage you when things get difficult.",
+      "I want us to keep growing, learning, and becoming better people while supporting each other's dreams.",
+      "I want you to feel free to be yourself around me, to laugh without holding back, and to know that your happiness matters to me.",
+      "And whenever life gives us difficult days, I hope we remember the same thing: we're two people who care deeply about each other and want to see each other happy. ❤️🫰",
+    ],
+  },
+  {
+    title: "Inchallah, There's More Ahead of Us",
+    sticker: "✨",
+    lines: [
+      "When I think about the future, I think about the dreams we each carry, the goals we want to achieve, and the people we hope to become.",
+      "I hope to see you succeed in everything you work hard for. I hope to celebrate your achievements, watch you accomplish your dreams, and remind you how proud you should be of yourself.",
+      "And if God wills it, I hope that one day we will look back at these little beginnings from a beautiful place we built together.",
+      "Perhaps we'll smile at these messages, laugh at our old conversations, and realize that the little moments we cherished became part of something even more beautiful.",
+      "Until then, let's keep moving forward, one day and one memory at a time. ❤️🫰",
+    ],
+  },
+  {
+    title: "On Your Special Day",
+    sticker: "🎁",
+    lines: [
+      "Today, I don't just wish you a happy birthday.",
+      "I wish you peaceful mornings, nights filled with comfort, success that makes you proud, friends who genuinely care about you, and countless reasons to smile.",
+      "I wish you strength for the difficult days, confidence when you doubt yourself, and happiness in the little things you sometimes overlook.",
+      "May God protect you, bless your years, guide your steps, and grant you everything that is good for your heart and your future.",
+      "And may this new chapter of your life bring you closer to every dream you've been working toward.",
+      "You deserve beautiful things, and I sincerely hope this year brings you many of them. ❤️🫰",
+    ],
+  },
+  {
+    title: "One Last Thing, My Love ❤️",
+    sticker: "💜",
+    emphasisFrom: 5,
+    lines: [
+      "If I could choose one thing to remind you of today, it would be this:",
+      "Out of all the unexpected things that happened in my life, meeting you and getting to know you has become one of my favorite stories.",
+      "I love the person you are, the way you express yourself, the little details that make you unique, and the beautiful memories we've created together.",
+      "I don't know every detail of what tomorrow holds, but I know that I want to keep working toward a beautiful future, supporting your dreams while pursuing mine, and making more memories with you along the way.",
+      "And if God writes that future for us, I hope that one day we'll celebrate your birthday together, not just through messages on a screen, but side by side, grateful for the journey that brought us there.",
+      "Happy Birthday, my favorite person.",
+      "Thank you for being you. Thank you for choosing me, too.",
+      "And if I had to go back to that very first message and live our story all over again, I'd still be happy to discover you, one conversation at a time.",
+      "I love you. ❤️🫰",
+    ],
+  },
+];
+
+const TONES = ["pink", "yellow", "lilac", "mint"];
+
+/* ---------- One message card, revealed when scrolled into view ---------- */
+function MessageCard({ section, index }) {
+  const ref = useRef(null);
+  const [seen, setSeen] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (!("IntersectionObserver" in window)) {
+      setSeen(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setSeen(true);
+          io.disconnect();
+        }
+      },
+      { threshold: 0.1, rootMargin: "0px 0px -6% 0px" }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  const tone = TONES[index % TONES.length];
+  const tilt = index % 2 === 0 ? "tilt-a" : "tilt-b";
+  const lastIdx = section.lines.length - 1;
+  const isLastSection = index === SECTIONS.length - 1;
+
+  return (
+    <article
+      ref={ref}
+      className={`card tone-${tone} ${tilt} ${seen ? "is-seen" : ""}`}
+    >
+      <span className="card__sticker" aria-hidden="true">
+        {section.sticker}
+      </span>
+      <h2 className="card__title reveal" style={{ "--i": 0 }}>
+        {section.title}
+      </h2>
+      {section.lines.map((line, i) => {
+        const emph = section.emphasisFrom !== undefined && i >= section.emphasisFrom;
+        const final = isLastSection && i === lastIdx;
+        return (
+          <p
+            key={i}
+            className={`card__line reveal ${emph ? "is-emph" : ""} ${final ? "is-final" : ""}`}
+            style={{ "--i": Math.min(i + 1, 9) }}
+          >
+            {line}
+          </p>
+        );
+      })}
+    </article>
+  );
+}
+
+/* ---------- Page ---------- */
+export default function BirthdayPage() {
+  const [introFading, setIntroFading] = useState(false);
+  const [introGone, setIntroGone] = useState(false);
+  const [playing, setPlaying] = useState(false);
+
   const audioRef = useRef(null);
-  const swipeContainerRef = useRef(null);
-  const contentAreaRef = useRef(null);
-  const countdownIntervalRef = useRef(null);
-  
-  const totalSlides = 14;
-  
-  // Presentation data with FIXED image paths
-  const slides = [
-    {
-      id: 1,
-      type: 'image',
-      image: '/assets/1.jpeg',
-      title: 'First get in touch',
-      text: "I didn't know that this conversation would become a place of comfort, trust, and quiet happiness. Over time, your words, your kindness, and your presence made this connection something meaningful to me."
-    },
-    {
-      id: 2,
-      type: 'image',
-      image: '/assets/2d.jpeg',
-      title: 'Before the world knew, you did.',
-      text: 'When I received my first professional opportunity — my CIVP contract — you were the first person I wanted to tell, right after my parents. Not because it was an announcement, but because trust chooses quietly.'
-    },
-    {
-      id: 3,
-      type: 'image',
-      image: '/assets/3.jpeg',
-      title: 'Every journey feels lighter when someone cares.',
-      text: 'Before Algeria, before the roads and plans, there was you — advising, reminding, and looking out for me. It wasn\'t about the trip itself, but about knowing someone was thinking of me along the way. That kind of care stays.'
-    },
-    {
-      id: 4,
-      type: 'image',
-      image: '/assets/4.jpeg',
-      title: 'Small Moments, Big Meaning',
-      text: 'It\'s in the small things — a message at the right time, a shared laugh, a moment of understanding. These fragments of connection weave into something lasting, something that feels like home.'
-    },
-    {
-      id: 5,
-      type: 'text',
-      title: 'Simply, Thank You',
-      text: 'For being there, for listening, for understanding without judgment. For the quiet support that never asked for anything in return. Some connections are rare — this is one of them.'
-    },
-    {
-      id: 6,
-      type: 'text',
-      title: 'I would like to say ...',
-      text: 'I really loved you , maybe in my own and unique way but be sure that it\'s honest and clear and not casual as many people around hahaha that we both hate them , but , I don\'t know , I just wanted to say and not to hide it anymore'
-    },
-    {
-      id: 7,
-      type: 'text',
-      title: 'I chose this day , 9th January',
-      text: 'Because everything started here , hahaha with a note reply , but it\'ve lead us into this storm that I really loved'
-    },
-    {
-      id: 8,
-      type: 'text',
-      title: 'And now ...',
-      text: 'I just want you to know that I really loved you and these moments we shared together , thanks for everything , I will be by your side as possible as I can inchallah'
-    },
-    {
-      id: 9,
-      type: 'text-only',
-      title: 'You are not only special to me.'
-    },
-    {
-      id: 10,
-      type: 'text-only',
-      title: 'With time, reflection, and sincerity, I realized something deeper: you are the person I choose — not for a moment, but for a path I want to walk with intention and respect'
-    },
-    {
-      id: 11,
-      type: 'text-only',
-      title: 'I don\'t speak of rushed promises or perfect futures. I speak of a decision made calmly, with values, faith, and responsibility'
-    },
-    {
-      id: 12,
-      type: 'text-only',
-      title: 'Inchallah , you are the one I wish to continue with — honestly, openly, and toward something meaningful'
-    },
-    {
-      id: 13,
-      type: 'text-only',
-      title: 'No expectations, Only sincerity.'
-    },
-    {
-      id: 14,
-      type: 'text-only',
-      title: '❤️'
-    }
-  ];
+  const userPaused = useRef(false);
+  const wasPlayingBeforeHide = useRef(false);
 
-  // Date calculation function
-  const calculateDateFromDaysLeft = (days) => {
-    const startDate = new Date('2025-01-09');
-    const targetDate = new Date('2026-01-09');
-    const totalDays = 365;
-    
-    // Calculate progress percentage
-    const progress = (totalDays - days) / totalDays;
-    
-    // Calculate current date based on progress
-    const timeDiff = targetDate.getTime() - startDate.getTime();
-    const currentTime = startDate.getTime() + (timeDiff * progress);
-    const currentDateObj = new Date(currentTime);
-    
-    // Format date
-    const options = { day: 'numeric', month: 'long', year: 'numeric' };
-    return currentDateObj.toLocaleDateString('en-US', options);
-  };
-
-  // Start countdown animation
-  const startCountdown = () => {
-    setShowCountdown(true);
-    setDaysLeft(365);
-    setCurrentDate('9 January 2025');
-    
-    // Clear any existing intervals
-    if (countdownIntervalRef.current) {
-      clearInterval(countdownIntervalRef.current);
-    }
-    
-    // Start music immediately
-    playMusic();
-    
-    // Calculate interval for 5 seconds total (5000ms / 365 ≈ 13.7ms per day)
-    const intervalTime = 5000 / 365; // About 13.7ms per day for 5 seconds total
-    
-    countdownIntervalRef.current = setInterval(() => {
-      setDaysLeft(prevDays => {
-        const newDays = prevDays - 1;
-        
-        if (newDays <= 0) {
-          clearInterval(countdownIntervalRef.current);
-          // Transition to presentation after countdown
-          setTimeout(() => {
-            setShowCountdown(false);
-            startPresentation();
-          }, 300); // Brief pause at the end
-          return 0;
-        }
-        
-        // Update current date
-        setCurrentDate(calculateDateFromDaysLeft(newDays));
-        return newDays;
-      });
-    }, intervalTime);
-  };
-
-  // Start presentation
-  const startPresentation = () => {
-    setIsStarted(true);
-    
-    setTimeout(() => {
-      if (contentAreaRef.current) {
-        contentAreaRef.current.classList.add('active');
-      }
-      
-      // Show swipe hint briefly on mobile
-      if (windowSize.width <= 768) {
-        setTimeout(() => {
-          const hint = document.getElementById('swipe-hint');
-          if (hint) {
-            hint.style.display = 'block';
-            setTimeout(() => {
-              hint.style.display = 'none';
-            }, 8000);
-          }
-        }, 1000);
-      }
-    }, 50);
-  };
-
-  // FIXED: Improved resize handler with debounce
+  /* Intro: 4 seconds, then fade out */
   useEffect(() => {
-    let resizeTimer;
-    const handleResize = () => {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(() => {
-        setWindowSize({
-          width: window.innerWidth,
-          height: window.innerHeight
-        });
-        
-        if (swipeContainerRef.current) {
-          const slideWidth = swipeContainerRef.current.clientWidth / totalSlides;
-          prevTranslate.current = -currentItemIndex * slideWidth;
-          currentTranslate.current = prevTranslate.current;
-          swipeContainerRef.current.style.transform = `translateX(${prevTranslate.current}px)`;
-        }
-      }, 100);
-    };
-
-    window.addEventListener('resize', handleResize);
-    handleResize(); // Initial call
-    
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      clearTimeout(resizeTimer);
-    };
-  }, [currentItemIndex, totalSlides]);
-
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = volume;
-      audioRef.current.loop = true;
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
     }
-    
+    window.scrollTo(0, 0);
+    const t1 = setTimeout(() => setIntroFading(true), INTRO_MS);
+    const t2 = setTimeout(() => setIntroGone(true), INTRO_MS + 900);
     return () => {
-      if (countdownIntervalRef.current) {
-        clearInterval(countdownIntervalRef.current);
-      }
+      clearTimeout(t1);
+      clearTimeout(t2);
     };
   }, []);
 
-  // Music controls
-  const playMusic = () => {
-    if (audioRef.current) {
-      audioRef.current.play()
-        .then(() => {
-          setIsMusicPlaying(true);
-        })
-        .catch(e => {
-          console.log("Autoplay prevented:", e);
-          if (windowSize.width <= 768) {
-            setTimeout(() => {
-              alert("Please tap the play button to start the background music.");
-            }, 1000);
-          }
-        });
-    }
-  };
-
-  const toggleMusic = () => {
-    if (audioRef.current) {
-      if (isMusicPlaying) {
-        audioRef.current.pause();
-      } else {
-        audioRef.current.play();
-      }
-      setIsMusicPlaying(!isMusicPlaying);
-    }
-  };
-
-  const handleVolumeChange = (e) => {
-    const newVolume = parseFloat(e.target.value);
-    setVolume(newVolume);
-    if (audioRef.current) {
-      audioRef.current.volume = newVolume;
-    }
-  };
-
-  const toggleVolumeSlider = () => {
-    setShowVolumeSlider(!showVolumeSlider);
-  };
-
-  // Navigation functions
-  const goToSlide = useCallback((index) => {
-    if (index < 0) index = 0;
-    if (index >= totalSlides) index = totalSlides - 1;
-    
-    setCurrentItemIndex(index);
-    if (swipeContainerRef.current) {
-      const slideWidth = swipeContainerRef.current.clientWidth / totalSlides;
-      prevTranslate.current = -index * slideWidth;
-      currentTranslate.current = prevTranslate.current;
-      
-      // Animate to position
-      swipeContainerRef.current.style.transition = 'transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-      swipeContainerRef.current.style.transform = `translateX(${prevTranslate.current}px)`;
-    }
-  }, [totalSlides]);
-
-  // Touch handlers with improved mobile detection
-  const handleTouchStart = (e) => {
-    startPosX.current = e.touches[0].clientX;
-    setIsDragging(true);
-    
-    // Prevent scrolling while swiping
-    document.body.style.overflow = 'hidden';
-  };
-
-  const handleTouchMove = (e) => {
-    if (!isDragging || !swipeContainerRef.current) return;
-    
-    const currentPosition = e.touches[0].clientX;
-    const diff = currentPosition - startPosX.current;
-    currentTranslate.current = prevTranslate.current + diff;
-    
-    // Apply boundaries
-    const maxTranslate = 0;
-    const minTranslate = -swipeContainerRef.current.clientWidth * (1 - (1/totalSlides));
-    currentTranslate.current = Math.max(minTranslate, Math.min(maxTranslate, currentTranslate.current));
-    
-    swipeContainerRef.current.style.transform = `translateX(${currentTranslate.current}px)`;
-  };
-
-  const handleTouchEnd = () => {
-    if (!isDragging) return;
-    setIsDragging(false);
-    
-    // Restore scrolling
-    document.body.style.overflow = '';
-    
-    const movedBy = currentTranslate.current - prevTranslate.current;
-    const swipeThreshold = windowSize.width <= 768 ? 50 : 100; // Lower threshold for mobile
-    
-    if (Math.abs(movedBy) > swipeThreshold) {
-      if (movedBy > 0 && currentItemIndex > 0) {
-        goToSlide(currentItemIndex - 1);
-      } else if (movedBy < 0 && currentItemIndex < totalSlides - 1) {
-        goToSlide(currentItemIndex + 1);
-      } else {
-        goToSlide(currentItemIndex);
-      }
-    } else {
-      goToSlide(currentItemIndex);
-    }
-  };
-
-  // Mouse handlers for desktop
-  const handleMouseDown = (e) => {
-    startPosX.current = e.clientX;
-    setIsDragging(true);
-    if (swipeContainerRef.current) {
-      swipeContainerRef.current.style.cursor = 'grabbing';
-    }
-  };
-
-  const handleMouseMove = (e) => {
-    if (!isDragging || !swipeContainerRef.current) return;
-    e.preventDefault();
-    
-    const currentPosition = e.clientX;
-    const diff = currentPosition - startPosX.current;
-    currentTranslate.current = prevTranslate.current + diff;
-    
-    // Apply boundaries
-    const maxTranslate = 0;
-    const minTranslate = -swipeContainerRef.current.clientWidth * (1 - (1/totalSlides));
-    currentTranslate.current = Math.max(minTranslate, Math.min(maxTranslate, currentTranslate.current));
-    
-    swipeContainerRef.current.style.transform = `translateX(${currentTranslate.current}px)`;
-  };
-
-  const handleMouseUp = () => {
-    if (!isDragging) return;
-    setIsDragging(false);
-    
-    if (swipeContainerRef.current) {
-      swipeContainerRef.current.style.cursor = 'grab';
-    }
-    
-    const movedBy = currentTranslate.current - prevTranslate.current;
-    const swipeThreshold = 100;
-    
-    if (Math.abs(movedBy) > swipeThreshold) {
-      if (movedBy > 0 && currentItemIndex > 0) {
-        goToSlide(currentItemIndex - 1);
-      } else if (movedBy < 0 && currentItemIndex < totalSlides - 1) {
-        goToSlide(currentItemIndex + 1);
-      } else {
-        goToSlide(currentItemIndex);
-      }
-    } else {
-      goToSlide(currentItemIndex);
-    }
-  };
-
-  const handleMouseLeave = () => {
-    if (isDragging) {
-      setIsDragging(false);
-      if (swipeContainerRef.current) {
-        swipeContainerRef.current.style.cursor = 'grab';
-      }
-      goToSlide(currentItemIndex);
-    }
-  };
-
-  // Handle page visibility change
+  /* Lock scrolling while the intro is on screen */
   useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.hidden && isMusicPlaying && audioRef.current) {
-        audioRef.current.pause();
-      } else if (!document.hidden && isMusicPlaying && audioRef.current) {
-        audioRef.current.play();
+    if (introGone) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [introGone]);
+
+  /* Background music: try autoplay, otherwise start on first interaction */
+  const tryPlay = useCallback(() => {
+    const a = audioRef.current;
+    if (!a) return Promise.resolve(false);
+    return a.play().then(
+      () => true,
+      () => false
+    );
+  }, []);
+
+  useEffect(() => {
+    const a = audioRef.current;
+    if (!a) return;
+    a.volume = 0.6;
+
+    const onPlay = () => setPlaying(true);
+    const onPause = () => setPlaying(false);
+    a.addEventListener("play", onPlay);
+    a.addEventListener("pause", onPause);
+
+    const events = ["pointerdown", "pointerup", "touchstart", "touchend", "click", "keydown", "wheel", "scroll"];
+    const remove = () => events.forEach((ev) => window.removeEventListener(ev, unlock));
+    function unlock() {
+      if (userPaused.current) return;
+      tryPlay().then((ok) => ok && remove());
+    }
+
+    tryPlay().then((ok) => {
+      if (!ok) events.forEach((ev) => window.addEventListener(ev, unlock, { passive: true }));
+    });
+
+    return () => {
+      a.removeEventListener("play", onPlay);
+      a.removeEventListener("pause", onPause);
+      remove();
+    };
+  }, [tryPlay]);
+
+  /* Pause when the tab/app is hidden, resume when back */
+  useEffect(() => {
+    const onVisibility = () => {
+      const a = audioRef.current;
+      if (!a) return;
+      if (document.hidden) {
+        wasPlayingBeforeHide.current = !a.paused;
+        a.pause();
+      } else if (wasPlayingBeforeHide.current && !userPaused.current) {
+        a.play().catch(() => {});
       }
     };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, []);
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [isMusicPlaying]);
-
-  // Get volume icon based on level
-  const getVolumeIcon = () => {
-    if (volume === 0) return '🔇';
-    if (volume < 0.5) return '🔉';
-    return '🔊';
+  const toggleMusic = () => {
+    const a = audioRef.current;
+    if (!a) return;
+    if (a.paused) {
+      userPaused.current = false;
+      a.play().catch(() => {});
+    } else {
+      userPaused.current = true;
+      a.pause();
+    }
   };
 
   return (
-    <div className="interactive-presentation">
-      {/* Countdown Screen */}
-      {showCountdown && (
-        <div className="countdown-screen">
-          <div className="cinema-overlay-dark"></div>
-          <div className="film-grain"></div>
-          <div className="countdown-container">
-            {/* Date Range */}
-            <div className="date-range-cinematic">
-              <div className="date-start">9 January 2025</div>
-              <div className="date-arrow">→</div>
-              <div className="date-end">9 January 2026</div>
-            </div>
-            
-            {/* Days Count - Just the number */}
-            <div className="days-number-cinematic">
-              {daysLeft}
-            </div>
-            
-            {/* Current Date */}
-            <div className="current-date-cinematic">
-              {currentDate}
-            </div>
-            
-            {/* Cinematic Elements */}
-            <div className="cinematic-light-left"></div>
-            <div className="cinematic-light-right"></div>
-            <div className="scanlines"></div>
-            <div className="vignette"></div>
-          </div>
+    <div className={`amal-page ${introFading ? "is-ready" : ""}`}>
+      <div className="bg" aria-hidden="true" />
+
+      {/* Intro message (4s) */}
+      {!introGone && (
+        <div className={`intro ${introFading ? "intro--out" : ""}`} role="status">
+          <p className="intro__text" dir="rtl" lang="ar">
+            قبل كل شيء ... راهو لازمك تسكرولي لوطة 🙂🤣
+          </p>
         </div>
-      )}
-      
-      {/* Initial Button Screen */}
-      {!showCountdown && !isStarted && (
-        <div className="initial-screen">
-          <div className="cinema-overlay"></div>
-          <div className="spotlight"></div>
-          
-          <div className="container">
-            <button 
-              className="init-btn"
-              onClick={startCountdown}
-            >
-              <span role="img" aria-label="play" className="play-icon">▶️</span> 
-              <span className="btn-text">Click here</span>
-            </button>
-          </div>
-        </div>
-      )}
-      
-      {/* Main Presentation Screen */}
-      {isStarted && (
-        <>
-          <div className="cinema-overlay"></div>
-          <div className="spotlight"></div>
-          
-          <div className="container">
-            <div 
-              className="content-area" 
-              ref={contentAreaRef}
-              id="content-area"
-            >
-              <div 
-                className="swipe-container no-select"
-                ref={swipeContainerRef}
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}
-                onMouseDown={handleMouseDown}
-                onMouseMove={handleMouseMove}
-                onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseLeave}
-                onContextMenu={(e) => e.preventDefault()}
-              >
-                {slides.map((slide, index) => (
-                  <div 
-                    key={slide.id}
-                    className={`content-item ${
-                      slide.type === 'image' ? 'has-image' : 
-                      slide.type === 'text-only' ? 'text-only-slide' : ''
-                    }`}
-                    id={`item-${slide.id}`}
-                  >
-                    {slide.type === 'image' && slide.image && (
-                      <div className="item-image-container">
-                        <img 
-                          src={slide.image} 
-                          alt={slide.title} 
-                          className="item-image" 
-                          onError={(e) => {
-                            console.error(`Failed to load image: ${slide.image}`);
-                            e.target.style.display = 'none';
-                            e.target.parentElement.innerHTML = `
-                              <div class="image-placeholder">
-                                <span>Image not found</span>
-                                <br/>
-                                <small>Place image at: public${slide.image}</small>
-                            `;
-                          }}
-                        />
-                        <div className="image-overlay"></div>
-                      </div>
-                    )}
-                    <div className="text-container">
-                      <h2 className="item-title">{slide.title}</h2>
-                      {slide.text && <p className="item-text">{slide.text}</p>}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              
-              <div className="swipe-hint" id="swipe-hint">
-                <span role="img" aria-label="left" className="hint-icon">◀️</span>
-                Swipe to navigate 
-                <span role="img" aria-label="right" className="hint-icon">▶️</span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="music-info">
-            <span role="img" aria-label="music" className="music-icon">🎵</span> Background music
-          </div>
-          
-          <div className="music-controls">
-            <button className="music-btn" onClick={toggleMusic}>
-              {isMusicPlaying ? '⏸️' : '▶️'}
-            </button>
-            <button className="music-btn" onClick={toggleVolumeSlider}>
-              {getVolumeIcon()}
-            </button>
-            <input 
-              type="range" 
-              id="volume-slider" 
-              className={`volume-slider ${showVolumeSlider ? 'show' : ''}`}
-              min="0" 
-              max="1" 
-              step="0.1" 
-              value={volume}
-              onChange={handleVolumeChange}
-            />
-          </div>
-        </>
       )}
 
-      <audio 
-        id="bg-music" 
-        ref={audioRef}
-        preload="auto"
-        loop
+      {/* Hero */}
+      <header className="hero">
+        {DECOS.map((d, i) => (
+          <span
+            key={i}
+            className="deco"
+            aria-hidden="true"
+            style={{ left: `${d.x}%`, top: `${d.y}%`, "--s": d.s, "--d": `${d.d}s` }}
+          >
+            {d.e}
+          </span>
+        ))}
+
+        <div className="hero__cake" aria-hidden="true">🎂</div>
+
+        <h1 className="hero__title">
+          <span style={{ "--k": 0 }}>Happy</span>
+          <span style={{ "--k": 1 }}>Birthday</span>
+          <span style={{ "--k": 2 }}>my love</span>
+        </h1>
+
+        <p className="hero__sub">
+          i didn't know what to get u this year ~<br />
+          so i built u this whole website 💕
+        </p>
+
+        <ul className="tags">
+          <li className="tag tag--white">★ for amal, only ★</li>
+          <li className="tag tag--yellow">{BIRTHDAY_LABEL}</li>
+          <li className="tag tag--lilac">priority: my purple 💜</li>
+        </ul>
+
+        <p className="hero__scroll">scroll for the good stuff ↓</p>
+      </header>
+
+      {/* Messages, one after the other */}
+      <main className="messages">
+        {SECTIONS.map((s, i) => (
+          <MessageCard key={s.title} section={s} index={i} />
+        ))}
+      </main>
+
+      <footer className="foot">made with 💜 for my purple</footer>
+
+      {/* Bear sticker */}
+      <div className="bear" aria-hidden="true">🧸</div>
+
+      {/* Music toggle */}
+      <button
+        type="button"
+        className={`music ${playing ? "is-on" : "is-off"}`}
+        onClick={toggleMusic}
+        aria-label={playing ? "Pause music" : "Play music"}
+        aria-pressed={playing}
       >
-        <source src="/assets/m.mp3" type="audio/mpeg" />
-        Your browser does not support the audio element.
-      </audio>
+        {playing ? "🎵" : "🔇"}
+      </button>
+
+      <audio ref={audioRef} src={SONG_SRC} loop preload="auto" />
     </div>
   );
-};
-
-export default InteractivePresentation;
+}
